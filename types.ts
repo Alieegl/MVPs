@@ -1,14 +1,21 @@
 export enum UserRole {
   DIRECTOR = 'DIRECTOR',
   COORDINATOR = 'COORDINATOR',
-  EXTERNAL = 'EXTERNAL' // Compras, Jurídica, GH
+  REVIEWER = 'REVIEWER' // Nuevo rol general para áreas transversales
 }
+
+export type Department = 'Dirección' | 'Proyectos' | 'Jurídica' | 'Compras' | 'Gestión Humana' | 'Financiera';
+
+export type DocFolder = 'PLANEACION' | 'CONTRACTUAL - INICIO' | 'EJECUCION' | 'CIERRE';
 
 export enum DocStatus {
   DRAFT = 'Borrador',
-  PENDING_SIG = 'Pendiente Firma',
+  IN_REVIEW_LEGAL = 'En Rev. Jurídica',
+  IN_REVIEW_FINANCE = 'En Rev. Compras',
+  IN_REVIEW_HR = 'En Rev. GH',
+  PENDING_SIG = 'Pendiente Firma', // Listo para el Director
   SIGNED = 'Firmado',
-  REJECTED = 'Rechazado',
+  REJECTED = 'Devuelto',
   ARCHIVED = 'Archivado'
 }
 
@@ -17,14 +24,15 @@ export enum DocType {
   REPORT = 'Informe',
   REQ = 'Requerimiento',
   ACT = 'Acta',
-  FINANCE = 'Soporte Financiero'
+  FINANCE = 'Soporte Financiero',
+  OFFER = 'Oferta Proveedor'
 }
 
 export interface User {
   id: string;
   name: string;
   role: UserRole;
-  area?: string;
+  department: Department;
   avatar: string;
 }
 
@@ -34,6 +42,7 @@ export interface Comment {
   userName: string;
   text: string;
   date: string;
+  roleBadge?: string; // Para mostrar "Jurídica" al lado del comentario
 }
 
 export interface Document {
@@ -41,21 +50,26 @@ export interface Document {
   projectId: string;
   title: string;
   type: DocType;
+  folder: DocFolder; // Carpeta a la que pertenece
   status: DocStatus;
   version: number;
   uploadedBy: string;
   uploadDate: string;
   dueDate: string; // YYYY-MM-DD
-  assignedTo?: string; // ID of user who needs to sign
+  assignedToDepartment?: Department; // A qué área le toca la pelota
+  currentAssigneeId?: string; // ID específico si se sabe
   url: string; // Mock URL
   comments: Comment[];
-  history: { action: string; date: string; user: string }[];
+  history: { action: string; date: string; user: string; detail?: string }[];
 }
 
 export interface Project {
   id: string;
+  code: string; // UCO-INF-001
   name: string;
   description: string;
   status: 'Activo' | 'Cerrado' | 'Pausado';
   progress: number;
+  departmentOwner: Department;
+  powerBiUrl?: string; // Link al tablero público
 }
