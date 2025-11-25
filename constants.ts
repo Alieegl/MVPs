@@ -8,165 +8,96 @@ export const USERS: User[] = [
   { id: 'u5', name: 'Pedro GH', role: UserRole.REVIEWER, department: 'Gestión Humana', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro' },
 ];
 
-export const PROJECTS: Project[] = [
-  { 
-    id: 'p1', 
-    code: 'INF-24-01', 
-    name: 'Consultorio Sustentable', 
-    description: 'Adecuación de espacios para consultoría ambiental y sostenibilidad.', 
-    status: 'Activo', 
-    progress: 65, 
-    departmentOwner: 'Proyectos',
-    powerBiUrl: 'https://app.powerbi.com/view?r=eyJrIjoiEXAMPLE' 
-  },
-  { 
-    id: 'p2', 
-    code: 'SOC-24-05', 
-    name: 'Investigación Rural 2024', 
-    description: 'Impacto social en el oriente antioqueño.', 
-    status: 'Activo', 
-    progress: 30, 
-    departmentOwner: 'Proyectos' 
-  },
-  { 
-    id: 'p3', 
-    code: 'DOT-24-12', 
-    name: 'Dotación Laboratorios', 
-    description: 'Compra de equipos biomédicos importados.', 
-    status: 'Pausado', 
-    progress: 10, 
-    departmentOwner: 'Compras' 
-  },
-];
+// --- GENERADOR DE DATOS MASIVOS ---
 
-// Generador de fechas relativas para simular retrasos
-const today = new Date();
-const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-const lastWeek = new Date(today); lastWeek.setDate(lastWeek.getDate() - 7);
-const twoWeeksAgo = new Date(today); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+const DEPARTMENTS = ['Proyectos', 'Jurídica', 'Compras', 'Gestión Humana', 'Dirección'];
+const FOLDERS = ['PLANEACION', 'CONTRACTUAL - INICIO', 'EJECUCION', 'CIERRE'];
+const DOC_TYPES = Object.values(DocType);
 
-const fmt = (d: Date) => d.toISOString().split('T')[0];
+const generateProjects = (count: number): Project[] => {
+  return Array.from({ length: count }).map((_, i) => {
+    const id = `p${i + 1}`;
+    const code = `UCO-24-${(i + 1).toString().padStart(3, '0')}`;
+    const depts = ['Infraestructura', 'Académico', 'Tecnología', 'Bienestar', 'Investigación'];
+    const type = depts[i % depts.length];
+    
+    return {
+      id,
+      code,
+      name: `${type}: Proyecto ${i + 1} de Mejoramiento`,
+      description: `Ejecución de actividades relacionadas con el plan maestro de ${type.toLowerCase()} para el periodo 2024-2025.`,
+      status: Math.random() > 0.8 ? 'Cerrado' : 'Activo',
+      progress: Math.floor(Math.random() * 100),
+      departmentOwner: 'Proyectos',
+      powerBiUrl: i % 3 === 0 ? 'https://app.powerbi.com/view?r=mock' : undefined
+    };
+  });
+};
 
-export const INITIAL_DOCUMENTS: Document[] = [
-  // --- DIRECTOR PENDIENTES (Retrasados y Al día) ---
-  {
-    id: 'd1',
-    projectId: 'p1',
-    title: 'Aprobación Final Fase 1',
-    type: DocType.ACT,
-    folder: 'EJECUCION',
-    status: DocStatus.PENDING_SIG,
-    version: 2,
-    uploadedBy: 'Ana Coordinadora',
-    uploadDate: fmt(lastWeek),
-    dueDate: fmt(yesterday), // VENCIDO
-    assignedToDepartment: 'Dirección', 
-    url: '#',
-    comments: [],
-    history: [{ action: 'Revisado', date: fmt(lastWeek), user: 'Ana Coordinadora' }]
-  },
-  {
-    id: 'd2',
-    projectId: 'p2',
-    title: 'Acta de Inicio - Rural',
-    type: DocType.ACT,
-    folder: 'CONTRACTUAL - INICIO',
-    status: DocStatus.PENDING_SIG,
-    version: 1,
-    uploadedBy: 'Ana Coordinadora',
-    uploadDate: fmt(today),
-    dueDate: fmt(tomorrow), // A TIEMPO
-    assignedToDepartment: 'Dirección',
-    url: '#',
-    comments: [],
-    history: [{ action: 'Cargado', date: fmt(today), user: 'Ana Coordinadora' }]
-  },
+const generateDocuments = (projects: Project[]): Document[] => {
+  let docs: Document[] = [];
+  let docIdCounter = 1;
 
-  // --- JURIDICA PENDIENTES ---
-  {
-    id: 'd3',
-    projectId: 'p1',
-    title: 'Contrato Obra Civil No. 004',
-    type: DocType.CONTRACT,
-    folder: 'CONTRACTUAL - INICIO',
-    status: DocStatus.IN_REVIEW_LEGAL,
-    version: 1,
-    uploadedBy: 'Ana Coordinadora',
-    uploadDate: fmt(twoWeeksAgo),
-    dueDate: fmt(lastWeek), // MUY VENCIDO
-    assignedToDepartment: 'Jurídica',
-    url: '#',
-    comments: [],
-    history: [{ action: 'Envío a Jurídica', date: fmt(twoWeeksAgo), user: 'Ana Coordinadora' }]
-  },
-  {
-    id: 'd4',
-    projectId: 'p3',
-    title: 'Convenio Marco Proveedores',
-    type: DocType.CONTRACT,
-    folder: 'PLANEACION',
-    status: DocStatus.IN_REVIEW_LEGAL,
-    version: 3,
-    uploadedBy: 'Marta Compras',
-    uploadDate: fmt(yesterday),
-    dueDate: fmt(tomorrow),
-    assignedToDepartment: 'Jurídica',
-    url: '#',
-    comments: [],
-    history: [{ action: 'Ajustes realizados', date: fmt(yesterday), user: 'Marta Compras' }]
-  },
+  projects.forEach(p => {
+    // 3 a 5 documentos por proyecto
+    const numDocs = Math.floor(Math.random() * 3) + 3; 
 
-  // --- COMPRAS PENDIENTES ---
-  {
-    id: 'd5',
-    projectId: 'p3',
-    title: 'Oferta Económica Equipos',
-    type: DocType.OFFER,
-    folder: 'PLANEACION',
-    status: DocStatus.IN_REVIEW_FINANCE,
-    version: 1,
-    uploadedBy: 'Ana Coordinadora',
-    uploadDate: fmt(lastWeek),
-    dueDate: fmt(yesterday), // VENCIDO
-    assignedToDepartment: 'Compras',
-    url: '#',
-    comments: [],
-    history: [{ action: 'Solicitud Evaluación', date: fmt(lastWeek), user: 'Ana Coordinadora' }]
-  },
+    for (let j = 0; j < numDocs; j++) {
+      const isLate = Math.random() > 0.7;
+      const type = DOC_TYPES[Math.floor(Math.random() * DOC_TYPES.length)];
+      const folder = FOLDERS[Math.floor(Math.random() * FOLDERS.length)] as any;
+      
+      // Determinar estado y asignación
+      let status = DocStatus.DRAFT;
+      let assignedTo: any = 'Proyectos';
+      const rand = Math.random();
 
-  // --- GESTIÓN HUMANA PENDIENTES ---
-  {
-    id: 'd6',
-    projectId: 'p2',
-    title: 'Contratación Auxiliares Campo',
-    type: DocType.REQ,
-    folder: 'CONTRACTUAL - INICIO',
-    status: DocStatus.IN_REVIEW_HR,
-    version: 1,
-    uploadedBy: 'Ana Coordinadora',
-    uploadDate: fmt(today),
-    dueDate: fmt(tomorrow),
-    assignedToDepartment: 'Gestión Humana',
-    url: '#',
-    comments: [],
-    history: [{ action: 'Requerimiento Personal', date: fmt(today), user: 'Ana Coordinadora' }]
-  },
+      if (rand < 0.2) { status = DocStatus.PENDING_SIG; assignedTo = 'Dirección'; }
+      else if (rand < 0.4) { status = DocStatus.SIGNED; assignedTo = 'Proyectos'; }
+      else if (rand < 0.5) { status = DocStatus.IN_REVIEW_LEGAL; assignedTo = 'Jurídica'; }
+      else if (rand < 0.6) { status = DocStatus.IN_REVIEW_FINANCE; assignedTo = 'Compras'; }
+      else if (rand < 0.7) { status = DocStatus.IN_REVIEW_HR; assignedTo = 'Gestión Humana'; }
+      else if (rand < 0.8) { status = DocStatus.REJECTED; assignedTo = 'Proyectos'; }
+      
+      // Fechas
+      const today = new Date();
+      const uploadDate = new Date(today);
+      uploadDate.setDate(today.getDate() - Math.floor(Math.random() * 30));
+      
+      const dueDate = new Date(uploadDate);
+      dueDate.setDate(dueDate.getDate() + 5); // 5 días para firmar
+      
+      // Si queremos que esté vencido y no está firmado
+      if (isLate && status !== DocStatus.SIGNED && status !== DocStatus.REJECTED) {
+         dueDate.setDate(today.getDate() - 2); 
+      } else {
+         dueDate.setDate(today.getDate() + 10);
+      }
 
-  // --- ARCHIVADOS / FIRMADOS ---
-  {
-    id: 'd7',
-    projectId: 'p1',
-    title: 'Estudios Previos Aprobados',
-    type: DocType.REPORT,
-    folder: 'PLANEACION',
-    status: DocStatus.SIGNED,
-    version: 1,
-    uploadedBy: 'Ana Coordinadora',
-    uploadDate: '2024-01-15',
-    dueDate: '2024-01-20',
-    url: '#',
-    comments: [],
-    history: [{ action: 'Firmado', date: '2024-01-18', user: 'Carlos Director' }]
-  }
-];
+      docs.push({
+        id: `d${docIdCounter++}`,
+        projectId: p.id,
+        title: `${type} - ${p.code} - Fase ${j+1}`,
+        type: type as DocType,
+        folder,
+        status,
+        version: status === DocStatus.REJECTED ? 2 : 1,
+        uploadedBy: 'Ana Coordinadora',
+        uploadDate: uploadDate.toISOString().split('T')[0],
+        dueDate: dueDate.toISOString().split('T')[0],
+        assignedToDepartment: assignedTo,
+        url: '#',
+        comments: [],
+        history: [
+          { action: 'Cargado', date: uploadDate.toISOString().split('T')[0], user: 'Ana Coordinadora' },
+          ...(status === DocStatus.REJECTED ? [{ action: 'Devuelto', date: today.toISOString().split('T')[0], user: 'Carlos Director', detail: 'Falta firma del interventor en la página 3.' }] : []),
+          ...(status === DocStatus.SIGNED ? [{ action: 'Firmado', date: today.toISOString().split('T')[0], user: 'Carlos Director' }] : [])
+        ]
+      });
+    }
+  });
+  return docs;
+};
+
+export const PROJECTS: Project[] = generateProjects(20);
+export const INITIAL_DOCUMENTS: Document[] = generateDocuments(PROJECTS);
