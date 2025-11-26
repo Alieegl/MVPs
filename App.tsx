@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
-// Importando desde la ruta relativa correcta (misma carpeta)
+// Correct relative import from the root directory
 import { USERS, PROJECTS, INITIAL_DOCUMENTS } from './constants';
 import { User, Project, Document, UserRole, DocStatus, DocType, Department, DocFolder } from './types';
 
@@ -342,7 +342,7 @@ const PowerBIModal = ({ isOpen, onClose, url }: { isOpen: boolean, onClose: () =
 const UploadModal = ({ isOpen, onClose, projects, currentUser, onUpload }: any) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
-  const [projectId, setProjectId] = useState(projects[0]?.id || '');
+  const [projectId, setProjectId] = useState(projects?.[0]?.id || '');
   const [folder, setFolder] = useState<DocFolder>('EJECUCION');
   const [type, setType] = useState<DocType>(DocType.REPORT);
   const [dueDate, setDueDate] = useState('');
@@ -383,7 +383,7 @@ const UploadModal = ({ isOpen, onClose, projects, currentUser, onUpload }: any) 
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="col-span-2"><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Título</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-gray-300 rounded p-2 focus:border-uco-green outline-none" /></div>
-            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Proyecto</label><select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full border border-gray-300 rounded p-2 focus:border-uco-green outline-none bg-white">{projects.map((p:any) => <option key={p.id} value={p.id}>{p.code} - {p.name}</option>)}</select></div>
+            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Proyecto</label><select value={projectId} onChange={(e) => setProjectId(e.target.value)} className="w-full border border-gray-300 rounded p-2 focus:border-uco-green outline-none bg-white">{projects?.map((p:any) => <option key={p.id} value={p.id}>{p.code} - {p.name}</option>)}</select></div>
             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Carpeta</label><select value={folder} onChange={(e) => setFolder(e.target.value as DocFolder)} className="w-full border border-gray-300 rounded p-2 focus:border-uco-green outline-none bg-white"><option value="PLANEACION">PLANEACION</option><option value="CONTRACTUAL - INICIO">CONTRACTUAL - INICIO</option><option value="EJECUCION">EJECUCION</option><option value="CIERRE">CIERRE</option></select></div>
             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label><select value={type} onChange={(e) => setType(e.target.value as DocType)} className="w-full border border-gray-300 rounded p-2 focus:border-uco-green outline-none bg-white">{Object.values(DocType).map(t => <option key={t} value={t}>{t}</option>)}</select></div>
             <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vencimiento</label><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full border border-gray-300 rounded p-2 focus:border-uco-green outline-none" /></div>
@@ -435,9 +435,15 @@ const Sidebar = ({ currentView, setCurrentView, currentUser, isOpen, onClose }: 
 // --- MAIN APP ---
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<User>(USERS[0]);
+  const [currentUser, setCurrentUser] = useState<User>(USERS?.[0] || {
+    id: 'guest',
+    name: 'Guest User',
+    role: UserRole.REVIEWER,
+    department: 'Proyectos',
+    avatar: ''
+  });
   const [currentView, setCurrentView] = useState('DASHBOARD');
-  const [documents, setDocuments] = useState<Document[]>(INITIAL_DOCUMENTS);
+  const [documents, setDocuments] = useState<Document[]>(INITIAL_DOCUMENTS || []);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<DocFolder | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -462,19 +468,22 @@ export default function App() {
   };
 
   const hasAccessToDoc = (doc: Document) => {
+    if (!doc) return false;
     if (currentUser.role === UserRole.DIRECTOR || currentUser.role === UserRole.COORDINATOR) return true;
     return doc.assignedToDepartment === currentUser.department;
   };
 
   const isPendingForMe = (doc: Document) => {
+     if (!doc) return false;
      if (currentUser.role === UserRole.DIRECTOR) return doc.status === DocStatus.PENDING_SIG;
      return doc.assignedToDepartment === currentUser.department && doc.status.includes('En Rev');
   };
 
   const matchesSearch = (doc: Document) => {
      if (!searchTerm) return true;
+     if (!doc) return false;
      const term = searchTerm.toLowerCase();
-     const project = PROJECTS.find(p => p.id === doc.projectId);
+     const project = PROJECTS?.find(p => p.id === doc.projectId);
      return doc.title.toLowerCase().includes(term) || 
             (project?.name || '').toLowerCase().includes(term) || 
             (project?.code || '').toLowerCase().includes(term);
@@ -569,7 +578,7 @@ export default function App() {
       <div className="space-y-8 animate-fade-in pb-20">
          <header className="flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
-               <h2 className="text-2xl md:text-3xl font-brand font-bold text-uco-blue">Hola, {currentUser.name.split(' ')[0]}</h2>
+               <h2 className="text-2xl md:text-3xl font-brand font-bold text-uco-blue">Hola, {currentUser.name?.split(' ')[0] || 'Usuario'}</h2>
                <p className="text-gray-500 text-sm">Resumen de gestión: <span className="font-bold text-uco-green">{departmentFilter ? `Filtro: ${departmentFilter}` : dashboardFilter}</span></p>
             </div>
             {currentUser.role === UserRole.COORDINATOR && (
@@ -626,7 +635,7 @@ export default function App() {
                              <div>
                                 <h4 className="font-bold text-gray-800 group-hover:text-uco-blue">{doc.title}</h4>
                                 <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                                   <span className="bg-gray-100 px-1.5 py-0.5 rounded">{PROJECTS.find(p=>p.id===doc.projectId)?.code}</span>
+                                   <span className="bg-gray-100 px-1.5 py-0.5 rounded">{PROJECTS?.find(p=>p.id===doc.projectId)?.code}</span>
                                    <span>• {doc.folder}</span>
                                    {daysLate > 0 && <span className="text-red-600 font-bold flex items-center gap-1"><AlertOctagon size={10}/> {daysLate} días tarde</span>}
                                 </div>
@@ -722,7 +731,7 @@ export default function App() {
   
   // (Render Project Detail and other sections remain similar, relying on updated components)
   const renderProjectDetail = () => {
-    const project = PROJECTS.find(p => p.id === selectedProjectId);
+    const project = PROJECTS?.find(p => p.id === selectedProjectId);
     
     // Safety check in case project is not found
     if (!project) {
@@ -835,7 +844,7 @@ export default function App() {
   return (
     <div className="flex bg-slate-50 min-h-screen font-sans text-gray-800">
       <ToastContainer toasts={toasts} removeToast={(id) => setToasts(p => p.filter(t => t.id !== id))} />
-      <PowerBIModal isOpen={isPowerBIOpen} onClose={() => setPowerBIOpen(false)} url={PROJECTS.find(p => p.id === selectedProjectId)?.powerBiUrl || ''} />
+      <PowerBIModal isOpen={isPowerBIOpen} onClose={() => setPowerBIOpen(false)} url={PROJECTS?.find(p => p.id === selectedProjectId)?.powerBiUrl || ''} />
       
       {/* Reject Modal */}
       <RejectModal isOpen={isRejectModalOpen} onClose={() => setRejectModalOpen(false)} onConfirm={handleReject} />
@@ -844,7 +853,7 @@ export default function App() {
          isOpen={!!viewingDoc} 
          onClose={() => setViewingDoc(null)} 
          doc={viewingDoc} 
-         project={PROJECTS.find(p => p.id === viewingDoc?.projectId)}
+         project={PROJECTS?.find(p => p.id === viewingDoc?.projectId)}
          onSign={viewingDoc && isPendingForMe(viewingDoc) ? handleSign : undefined}
          onReject={viewingDoc && isPendingForMe(viewingDoc) ? () => setRejectModalOpen(true) : undefined}
       />
@@ -868,8 +877,8 @@ export default function App() {
              </div>
           </div>
           <div className="flex items-center gap-4">
-            <select className="text-xs border rounded p-1 bg-gray-50 max-w-[150px] outline-none focus:border-uco-green" value={currentUser.id} onChange={(e) => { const u = USERS.find(us => us.id === e.target.value); if(u) { setCurrentUser(u); setCurrentView('DASHBOARD'); setSelectedProjectId(null); setSelectedFolder(null); setDashboardFilter('ALL'); setDepartmentFilter(null); } }}>{USERS.map(u => <option key={u.id} value={u.id}>{u.role === 'REVIEWER' ? `${u.name} (${u.department})` : u.name}</option>)}</select>
-            <div className="w-8 h-8 rounded-full bg-uco-green text-white flex items-center justify-center font-bold text-xs shadow-sm border border-green-600">{currentUser.name.charAt(0)}</div>
+            <select className="text-xs border rounded p-1 bg-gray-50 max-w-[150px] outline-none focus:border-uco-green" value={currentUser.id} onChange={(e) => { const u = USERS?.find(us => us.id === e.target.value); if(u) { setCurrentUser(u); setCurrentView('DASHBOARD'); setSelectedProjectId(null); setSelectedFolder(null); setDashboardFilter('ALL'); setDepartmentFilter(null); } }}>{USERS?.map(u => <option key={u.id} value={u.id}>{u.role === 'REVIEWER' ? `${u.name} (${u.department})` : u.name}</option>)}</select>
+            <div className="w-8 h-8 rounded-full bg-uco-green text-white flex items-center justify-center font-bold text-xs shadow-sm border border-green-600">{currentUser.name?.charAt(0)}</div>
           </div>
         </header>
 
@@ -878,7 +887,7 @@ export default function App() {
           
           {currentView === 'PROJECTS' && (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 animate-fade-in">
-                {PROJECTS.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
+                {PROJECTS?.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
                    <div key={p.id} onClick={() => { setSelectedProjectId(p.id); setSelectedFolder(null); setCurrentView('PROJECT_DETAIL'); }} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-uco-green hover:shadow-md cursor-pointer transition group relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-1 h-full bg-uco-green opacity-0 group-hover:opacity-100 transition-opacity"></div>
                       <div className="flex justify-between mb-4"><div className="p-3 bg-green-50 text-uco-green rounded-lg group-hover:bg-uco-green group-hover:text-white transition-colors"><FolderOpen /></div><span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded h-fit text-gray-600">{p.code}</span></div>
