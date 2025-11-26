@@ -5,19 +5,25 @@
 - **Modularidad:** Separación lógica de componentes dentro de archivos grandes para facilitar la futura extracción.
 - **Separación de Responsabilidades:** La lógica de negocio, los datos (mock) y la vista están desacoplados.
 
-## 2. Estructura de Carpetas
-El proyecto sigue una estructura conceptual que se expandirá en fases futuras:
+## 2. Control de Acceso Basado en Roles (RBAC)
+El sistema implementa dos experiencias de usuario distintas basadas en el rol:
 
-```
-/
-├── components/      # (Virtual) Bloques de UI reutilizables (Sidebar, Cards, Tablas)
-├── services/        # Lógica de conexión externa (GeminiService)
-├── types/           # Definiciones de TypeScript (Interfaces de dominio)
-├── docs/            # Documentación viva del proyecto
-└── constants.ts     # Datos Mock (Simulación de Base de Datos)
-```
+### Director / Coordinador
+- **Visión:** Jerárquica y Global.
+- **Navegación:** Proyectos -> Carpetas (Planeación, Ejecución...) -> Archivos.
+- **Dashboard:** KPIs globales, Carga de trabajo por áreas, Monitor de cuellos de botella.
 
-## 3. Estrategia de UI/UX (Responsive)
+### Revisor (Jurídica, Compras, GH)
+- **Visión:** Plana y Focalizada.
+- **Navegación:** Proyectos -> Lista de Documentos Asignados (Sin carpetas).
+- **Dashboard:** KPI personal (Mis pendientes, Mi efectividad).
+
+## 3. Máquina de Estados Documental
+Los documentos transitan por los siguientes estados:
+- `Borrador` -> `En Revisión (Area)` -> `Pendiente Firma` -> `Firmado`
+- En cualquier punto de revisión: `Rechazado` (Incrementa versión y requiere comentario).
+
+## 4. Estrategia de UI/UX (Responsive)
 El sistema utiliza una estrategia "Adaptativa" más que puramente fluida:
 
 ### Navegación
@@ -29,12 +35,7 @@ El sistema utiliza una estrategia "Adaptativa" más que puramente fluida:
   - En pantallas grandes (`md:` en adelante), usamos tablas densas para comparar datos.
   - En móviles, ocultamos la tabla y renderizamos componentes tipo "Tarjeta" (Cards) que apilan la información verticalmente para mejor legibilidad táctil.
 
-## 4. Gestión de Estado
+## 5. Gestión de Estado
 Para el MVP, utilizamos **React Local State** (`useState`).
 - Los datos persisten solo en memoria durante la sesión.
 - Las acciones (firmar, rechazar) actualizan el estado local simulando transacciones inmutables.
-
-## 5. Integración con IA (Gemini)
-El servicio `geminiService.ts` actúa como una capa de abstracción.
-- **Modelo:** Gemini 2.5 Flash.
-- **Contexto:** Se inyectan los metadatos (JSON) en el prompt del sistema para permitir RAG (Retrieval-Augmented Generation) ligero en el cliente.

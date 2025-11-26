@@ -5,6 +5,14 @@ Sistema de gestión documental y flujos de firma digital para la Dirección de P
 ## 🎯 Objetivo
 Digitalizar y organizar la gestión documental para resolver problemas de trazabilidad, retrasos en firmas y pérdida de documentos físicos, proporcionando una interfaz moderna y accesible para Directores, Coordinadores y Áreas Transversales.
 
+## 🚀 Funcionalidades Principales
+- **Gestión por Carpetas:** Estructura UCO (Planeación, Contractual, Ejecución, Cierre).
+- **Flujos de Aprobación:** Estados para Jurídica, Compras, GH y Dirección.
+- **Roles y Permisos:** Vistas personalizadas para Director (Torre de Control) y Áreas (Listas Planas).
+- **Indicadores de Retraso:** Alertas visuales de días de vencimiento.
+- **Power BI Embed:** Integración simulada de tableros de control por proyecto.
+- **Trazabilidad:** Historial de versiones y notas de rechazo obligatorias.
+
 ## 🚀 Cómo Iniciar
 Este proyecto es una aplicación React de una sola página (SPA).
 
