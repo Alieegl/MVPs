@@ -33,7 +33,10 @@ import {
   MessageSquare,
   History,
   Filter,
-  Trash2
+  Trash2,
+  PlayCircle,
+  PauseCircle,
+  StopCircle
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
@@ -458,6 +461,9 @@ export default function App() {
   // Dashboard Filters
   const [dashboardFilter, setDashboardFilter] = useState<'ALL' | 'PENDING' | 'SIGNED' | 'REJECTED'>('ALL');
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
+  
+  // Project Filters
+  const [projectStatusFilter, setProjectStatusFilter] = useState<'ALL' | 'ACTIVO' | 'CERRADO' | 'PAUSADO'>('ALL');
   
   const [toasts, setToasts] = useState<any[]>([]);
 
@@ -886,15 +892,68 @@ export default function App() {
           {currentView === 'DASHBOARD' && renderDashboard()}
           
           {currentView === 'PROJECTS' && (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 animate-fade-in">
-                {PROJECTS?.filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase())).map(p => (
-                   <div key={p.id} onClick={() => { setSelectedProjectId(p.id); setSelectedFolder(null); setCurrentView('PROJECT_DETAIL'); }} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-uco-green hover:shadow-md cursor-pointer transition group relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-uco-green opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <div className="flex justify-between mb-4"><div className="p-3 bg-green-50 text-uco-green rounded-lg group-hover:bg-uco-green group-hover:text-white transition-colors"><FolderOpen /></div><span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded h-fit text-gray-600">{p.code}</span></div>
-                      <h3 className="font-brand font-bold text-lg mb-1 text-uco-blue">{p.name}</h3><p className="text-sm text-gray-500 line-clamp-2 mb-4">{p.description}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mt-4 pt-4 border-t border-gray-100"><span>Progreso: {p.progress}%</span><ChevronRight size={16} className="text-uco-green"/></div>
-                   </div>
-                ))}
+             <div className="flex flex-col gap-6 pb-20 animate-fade-in">
+                {/* Project Status Filter */}
+                <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+                  <button 
+                    onClick={() => setProjectStatusFilter('ALL')} 
+                    className={`px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 ${projectStatusFilter === 'ALL' ? 'bg-uco-blue text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <Briefcase size={16}/> Todos
+                  </button>
+                  <button 
+                    onClick={() => setProjectStatusFilter('ACTIVO')} 
+                    className={`px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 ${projectStatusFilter === 'ACTIVO' ? 'bg-uco-green text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <PlayCircle size={16}/> En Curso
+                  </button>
+                  <button 
+                    onClick={() => setProjectStatusFilter('PAUSADO')} 
+                    className={`px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 ${projectStatusFilter === 'PAUSADO' ? 'bg-uco-yellow text-uco-blue shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <PauseCircle size={16}/> Próximos
+                  </button>
+                  <button 
+                    onClick={() => setProjectStatusFilter('CERRADO')} 
+                    className={`px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2 ${projectStatusFilter === 'CERRADO' ? 'bg-gray-700 text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    <StopCircle size={16}/> Finalizados
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {PROJECTS?.filter(p => {
+                    // Search Filter
+                    const searchMatch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase());
+                    // Status Filter
+                    const statusMatch = projectStatusFilter === 'ALL' || 
+                      (projectStatusFilter === 'ACTIVO' && p.status === 'Activo') ||
+                      (projectStatusFilter === 'CERRADO' && p.status === 'Cerrado') ||
+                      (projectStatusFilter === 'PAUSADO' && p.status === 'Pausado');
+                    
+                    return searchMatch && statusMatch;
+                  }).map(p => (
+                    <div key={p.id} onClick={() => { setSelectedProjectId(p.id); setSelectedFolder(null); setCurrentView('PROJECT_DETAIL'); }} className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-uco-green hover:shadow-md cursor-pointer transition group relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-uco-green opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="flex justify-between mb-4">
+                          <div className={`p-3 rounded-lg transition-colors ${p.status === 'Cerrado' ? 'bg-gray-100 text-gray-500' : p.status === 'Pausado' ? 'bg-yellow-50 text-uco-yellow' : 'bg-green-50 text-uco-green group-hover:bg-uco-green group-hover:text-white'}`}>
+                            <FolderOpen />
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded h-fit text-gray-600 mb-1">{p.code}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                              p.status === 'Activo' ? 'bg-green-50 text-green-700 border-green-200' :
+                              p.status === 'Cerrado' ? 'bg-gray-100 text-gray-600 border-gray-200' :
+                              'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>{p.status === 'Pausado' ? 'Próximo' : p.status}</span>
+                          </div>
+                        </div>
+                        <h3 className="font-brand font-bold text-lg mb-1 text-uco-blue">{p.name}</h3>
+                        <p className="text-sm text-gray-500 line-clamp-2 mb-4">{p.description}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-400 mt-4 pt-4 border-t border-gray-100"><span>Progreso: {p.progress}%</span><ChevronRight size={16} className="text-uco-green"/></div>
+                    </div>
+                  ))}
+                </div>
              </div>
           )}
 
